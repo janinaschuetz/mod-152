@@ -1,5 +1,5 @@
 var express = require("express");
-var sass = require('node-sass')
+var sass = require('node-sass');
 var fs = require("fs");
 const app = express();
 
@@ -13,7 +13,11 @@ app.post('/api/css/scss', function (req, res) {
     sass.render({
         file: "input/input.scss"
     }, function (err, result) {
-        res.send(result.css.toString());
+        if (!err){
+            res.send(result.css.toString());
+        } else {
+            res.status(400).send(err);
+        }
     });
 });
 
