@@ -1,28 +1,47 @@
 var express = require("express");
 var sass = require('node-sass');
+var less = require('less');
 var fs = require("fs");
 const app = express();
+const port = 3000;
 
-app.use(express.urlencoded({ extended: true }));
+app.use(express.urlencoded({extended: true}));
 app.use(express.json());
 
-app.use(express.static('input'));
-
+/**
+ * First endpoint to transpile scss into css
+ */
 app.post('/api/css/scss', function (req, res) {
-    fs.writeFileSync('input/input.scss', req.body.data.scss, () => {});
     sass.render({
-        file: "input/input.scss"
+        data: req.body.data.scss
     }, function (err, result) {
-        if (!err){
-            res.send(result.css.toString());
+        if (!err) {
+            res.json({
+                data: {
+                    css: result.css.toString()
+                }
+            });
         } else {
             res.status(400).send(err);
         }
     });
 });
 
+/**
+ * Second endpoint to transpile less into css
+ */
 app.post('/api/css/less', function (req, res) {
-    res.send("POST");
+    less.render(req.body.data.less, function (err, result) {
+        if (!err) {
+            res.json({
+                data: {
+                    css: result.css
+                }
+            });
+        } else {
+            res.status(400).send(err);
+        }
+    });
 });
 
-app.listen(process.env.PORT || 3000);
+app.listen(process.env.PORT || port);
