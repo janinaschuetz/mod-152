@@ -1,11 +1,13 @@
-var express = require("express");
-var sass = require('node-sass');
-var less = require('less');
-var fs = require("fs");
-var app = express();
-var port = 3000;
-app.use(express.urlencoded({ extended: true }));
+let express = require("express");
+let sass = require('node-sass');
+let less = require('less');
+let fs = require("fs");
+const app = express();
+const port = 3000;
+
+app.use(express.urlencoded({extended: true}));
 app.use(express.json());
+
 /**
  * First endpoint to transpile scss into css
  */
@@ -19,12 +21,12 @@ app.post('/api/css/scss', function (req, res) {
                     css: result.css.toString()
                 }
             });
-        }
-        else {
+        } else {
             res.status(400).send(err);
         }
     });
 });
+
 /**
  * Second endpoint to transpile less into css
  */
@@ -36,11 +38,10 @@ app.post('/api/css/less', function (req, res) {
                     css: result.css
                 }
             });
-        }
-        else {
+        } else {
             res.status(400).send(err);
         }
     });
 });
+
 app.listen(process.env.PORT || port);
-//# sourceMappingURL=server.js.map
