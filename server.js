@@ -114,11 +114,11 @@ app.post('/api/file', upload.single('file'), function (req, res, next) {
     res.json({
         data: {
             images: {
-                small: 'https://https://m152-bis19p-janina-schuetz.herokuapp.com/files/' + files[0],
-                medium: 'https://https://m152-bis19p-janina-schuetz.herokuapp.com/files/' + files[1],
-                large: 'https://https://m152-bis19p-janina-schuetz.herokuapp.com/files/' + files[2],
-                thumbnail: 'https://https://m152-bis19p-janina-schuetz.herokuapp.com/files/' + files[3],
-                original: 'https://https://m152-bis19p-janina-schuetz.herokuapp.com/files/' + files[4]
+                small: 'https://m152-bis19p-janina-schuetz.herokuapp.com/files/' + files[0],
+                medium: 'https://m152-bis19p-janina-schuetz.herokuapp.com/files/' + files[1],
+                large: 'https://m152-bis19p-janina-schuetz.herokuapp.com/files/' + files[2],
+                thumbnail: 'https://m152-bis19p-janina-schuetz.herokuapp.com/files/' + files[3],
+                original: 'https://m152-bis19p-janina-schuetz.herokuapp.com/files/' + files[4]
             }
         }
     });
