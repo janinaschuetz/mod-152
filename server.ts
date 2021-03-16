@@ -78,7 +78,7 @@ app.use('/files', express.static('files'));
 /**
  * Third endpoint to generate images in various sizes from one source-image
  */
-app.post('/api/file', upload.single('file'), (req,res, next) => {
+app.post('/api/file', upload.single('file'), async (req,res, next) => {
     for (let i = 0; i < 5; i++) {
         let filetype: string;
         let width: number;
@@ -114,7 +114,7 @@ app.post('/api/file', upload.single('file'), (req,res, next) => {
 
         files[i] = filetype + req.file.filename;
 
-        sharp(__dirname + '/uploads/' + req.file.filename)
+        await sharp(__dirname + '/uploads/' + req.file.filename)
             .resize(width, null, {
                 fit: "contain"
             })
@@ -127,10 +127,27 @@ app.post('/api/file', upload.single('file'), (req,res, next) => {
         data: {
             images: {
                 small: 'https://m152-bis19p-janina-schuetz.herokuapp.com/files/' + files[0],
-                medium: 'https://m152-bis19p-janina-schuetz.herokuapp.com/files/' + files [1],
+                medium: 'https://m152-bis19p-janina-schuetz.herokuapp.com/files/' + files[1],
                 large: 'https://m152-bis19p-janina-schuetz.herokuapp.com/files/' + files[2],
                 thumbnail: 'https://m152-bis19p-janina-schuetz.herokuapp.com/files/' + files[3],
                 original: 'https://m152-bis19p-janina-schuetz.herokuapp.com/files/' + files[4]
+            }
+        }
+    });
+});
+
+/**
+ * Fourth endpoint to merge multiple videos
+ */
+app.post('/api/videos', upload.array('files'), (req, res, next) => {
+
+    next();
+
+}, (req, res) => {
+    res.json({
+        data: {
+            video: {
+                location: "https://m152-bis19p-janina-schuetz.herokuapp.com/files/"
             }
         }
     });
