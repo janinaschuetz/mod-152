@@ -179,33 +179,58 @@ app.post('/api/file', upload.single('file'), function (req, res, next) { return 
 /**
  * Fourth endpoint to merge multiple videos
  */
-app.post('/api/videos', upload.array('files'), function (req, res) {
-    // query params
-    var queryString = window.location.search;
-    var urlParams = new URLSearchParams(queryString);
-    var turn = urlParams.get('turn');
-    var fileName = urlParams.get('fileName');
-    var width = urlParams.get('width');
-    var height = urlParams.get('height');
-    var videoBitrate = urlParams.get('videoBitrate');
-    // video merge
-    var mergedVideo = ffmpeg();
-    var videos = req.files;
-    videos.forEach(function (video) {
-        mergedVideo = mergedVideo.addInput(video);
-    });
-    mergedVideo.mergeToFile(__dirname + '/files/' + fileName)
-        .videoFilter('rotate=180')
-        .size(width + 'x' + height)
-        .videoBitrate(videoBitrate);
-    // response
-    res.json({
-        data: {
-            video: {
-                location: "https://m152-bis19p-janina-schuetz.herokuapp.com/files/" + fileName
-            }
+app.post('/api/videos', upload.array('files'), function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
+    var queryString, urlParams, turn, fileName, width, height, videoBitrate, mergedVideo, videos;
+    return __generator(this, function (_a) {
+        switch (_a.label) {
+            case 0:
+                queryString = window.location.search;
+                urlParams = new URLSearchParams(queryString);
+                turn = urlParams.get('turn');
+                fileName = urlParams.get('fileName');
+                width = urlParams.get('width');
+                height = urlParams.get('height');
+                videoBitrate = urlParams.get('videoBitrate');
+                if (turn == '') {
+                    turn = 'rotate=0';
+                }
+                else {
+                    turn = 'rotate=180';
+                }
+                if (fileName == '') {
+                    fileName = 'mergedVideo.mp4';
+                }
+                else {
+                    fileName += '.mp4';
+                }
+                if (width == '') {
+                    width = '?';
+                }
+                if (height == '') {
+                    height = '?';
+                }
+                mergedVideo = ffmpeg();
+                videos = req.files;
+                videos.forEach(function (video) {
+                    mergedVideo = mergedVideo.addInput(video);
+                });
+                return [4 /*yield*/, mergedVideo.mergeToFile(__dirname + '/files/' + fileName)
+                        .videoFilter(turn)
+                        .size(width + 'x' + height)
+                        .videoBitrate(videoBitrate)];
+            case 1:
+                _a.sent();
+                // json-response
+                res.json({
+                    data: {
+                        video: {
+                            location: "https://m152-bis19p-janina-schuetz.herokuapp.com/files/" + fileName
+                        }
+                    }
+                });
+                return [2 /*return*/];
         }
     });
-});
+}); });
 app.listen(process.env.PORT || port);
 //# sourceMappingURL=server.js.map

@@ -140,17 +140,37 @@ app.post('/api/file', upload.single('file'), async (req,res, next) => {
 /**
  * Fourth endpoint to merge multiple videos
  */
-app.post('/api/videos', upload.array('files'), (req, res) => {
+app.post('/api/videos', upload.array('files'), async (req, res) => {
 
     // query params
     const queryString = window.location.search;
     const urlParams = new URLSearchParams(queryString);
 
-    const turn = urlParams.get('turn');
-    const fileName = urlParams.get('fileName');
-    const width = urlParams.get('width');
-    const height = urlParams.get('height');
-    const videoBitrate = urlParams.get('videoBitrate');
+    let turn = urlParams.get('turn');
+    let fileName = urlParams.get('fileName');
+    let width = urlParams.get('width');
+    let height = urlParams.get('height');
+    let videoBitrate = urlParams.get('videoBitrate');
+
+    if (turn == '') {
+        turn = 'rotate=0';
+    } else {
+        turn = 'rotate=180'
+    }
+
+    if (fileName == '') {
+        fileName = 'mergedVideo.mp4';
+    } else {
+        fileName += '.mp4';
+    }
+
+    if (width == '') {
+        width = '?';
+    }
+
+    if (height == '') {
+        height = '?';
+    }
 
     // video merge
     let mergedVideo = ffmpeg();
@@ -160,12 +180,12 @@ app.post('/api/videos', upload.array('files'), (req, res) => {
         mergedVideo = mergedVideo.addInput(video);
     });
 
-    mergedVideo.mergeToFile(__dirname + '/files/' + fileName)
-        .videoFilter('rotate=180')
+    await mergedVideo.mergeToFile(__dirname + '/files/' + fileName)
+        .videoFilter(turn)
         .size(width + 'x' + height)
         .videoBitrate(videoBitrate);
 
-    // response
+    // json-response
     res.json({
         data: {
             video: {

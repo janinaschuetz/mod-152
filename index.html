@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="bootstrap.min.css">
+    <title>Video player</title>
+</head>
+<body>
+
+<div>
+    <video>
+        <source src="https://test-videos.co.uk/vids/bigbuckbunny/mp4/h264/1080/Big_Buck_Bunny_1080_10s_20MB.mp4" type="video/mp4">
+        Your browser does not support the video tag.
+    </video>
+</div>
+
+<div class="container">
+    <button id="play-button" class="btn btn-primary">Play</button>
+    <button id="pause-button" class="btn btn-danger">Pause</button>
+    <button id="speed-1.5-button" class="btn btn-secondary">Speed 1.5</button>
+    <button id="speed-2-button" class="btn btn-secondary">Speed 2</button>
+    <button id="fullscreen-button" class="btn btn-dark">Fullscreen</button>
+    <button id="mute-button" class="btn btn-warning">Mute</button>
+    <button id="unmute-button" class="btn btn-success">Unmute</button>
+</div>
+
+<script>
+    document.getElementById('play-button').addEventListener('click', function () {
+        const video = document.querySelector('video');
+        video.play();
+    });
+
+    document.getElementById('pause-button').addEventListener('click', function () {
+        const video = document.querySelector('video');
+        video.pause();
+    });
+
+    document.getElementById('speed-1.5-button').addEventListener('click', function () {
+        const video = document.querySelector('video');
+        video.playbackRate = 1.5;
+    });
+
+    document.getElementById('speed-2-button').addEventListener('click', function () {
+        const video = document.querySelector('video');
+        video.playbackRate = 2.0;
+    });
+
+    document.getElementById('fullscreen-button').addEventListener('click', function () {
+        const video = document.querySelector('video');
+        video.requestFullscreen();
+    });
+
+    document.getElementById('mute-button').addEventListener('click', function () {
+        const video = document.querySelector('video');
+        video.muted = true;
+    });
+
+    document.getElementById('unmute-button').addEventListener('click', function () {
+        const video = document.querySelector('video');
+        video.muted = false;
+    });
+
+</script>
+
+</body>
+</html>
