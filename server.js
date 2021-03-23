@@ -38,6 +38,7 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
 Object.defineProperty(exports, "__esModule", { value: true });
 var sharp = require("sharp");
 var multer = require("multer");
+var ffmpeg = require("fluent-ffmpeg");
 var express = require("express");
 var sass = require('node-sass');
 var less = require('less');
@@ -178,13 +179,30 @@ app.post('/api/file', upload.single('file'), function (req, res, next) { return 
 /**
  * Fourth endpoint to merge multiple videos
  */
-app.post('/api/videos', upload.array('files'), function (req, res, next) {
-    next();
-}, function (req, res) {
+app.post('/api/videos', upload.array('files'), function (req, res) {
+    // query params
+    var queryString = window.location.search;
+    var urlParams = new URLSearchParams(queryString);
+    var turn = urlParams.get('turn');
+    var fileName = urlParams.get('fileName');
+    var width = urlParams.get('width');
+    var height = urlParams.get('height');
+    var videoBitrate = urlParams.get('videoBitrate');
+    // video merge
+    var mergedVideo = ffmpeg();
+    var videos = req.files;
+    videos.forEach(function (video) {
+        mergedVideo = mergedVideo.addInput(video);
+    });
+    mergedVideo.mergeToFile(__dirname + '/files/' + fileName)
+        .videoFilter('rotate=180')
+        .size(width + 'x' + height)
+        .videoBitrate(videoBitrate);
+    // response
     res.json({
         data: {
             video: {
-                location: "https://m152-bis19p-janina-schuetz.herokuapp.com/files/"
+                location: "https://m152-bis19p-janina-schuetz.herokuapp.com/files/" + fileName
             }
         }
     });

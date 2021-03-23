@@ -1,5 +1,6 @@
 import * as sharp from "sharp";
 import * as multer from "multer";
+import * as ffmpeg from "fluent-ffmpeg";
 
 let express = require("express");
 let sass = require('node-sass');
@@ -139,15 +140,36 @@ app.post('/api/file', upload.single('file'), async (req,res, next) => {
 /**
  * Fourth endpoint to merge multiple videos
  */
-app.post('/api/videos', upload.array('files'), (req, res, next) => {
+app.post('/api/videos', upload.array('files'), (req, res) => {
 
-    next();
+    // query params
+    const queryString = window.location.search;
+    const urlParams = new URLSearchParams(queryString);
 
-}, (req, res) => {
+    const turn = urlParams.get('turn');
+    const fileName = urlParams.get('fileName');
+    const width = urlParams.get('width');
+    const height = urlParams.get('height');
+    const videoBitrate = urlParams.get('videoBitrate');
+
+    // video merge
+    let mergedVideo = ffmpeg();
+    let videos = req.files;
+
+    videos.forEach(function (video) {
+        mergedVideo = mergedVideo.addInput(video);
+    });
+
+    mergedVideo.mergeToFile(__dirname + '/files/' + fileName)
+        .videoFilter('rotate=180')
+        .size(width + 'x' + height)
+        .videoBitrate(videoBitrate);
+
+    // response
     res.json({
         data: {
             video: {
-                location: "https://m152-bis19p-janina-schuetz.herokuapp.com/files/"
+                location: "https://m152-bis19p-janina-schuetz.herokuapp.com/files/" + fileName
             }
         }
     });
