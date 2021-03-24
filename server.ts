@@ -61,9 +61,11 @@ let store = multer.diskStorage({
     filename: (req, file, callback) => {
         if (file.mimetype.indexOf("image") > -1) {
             callback(null, Date.now() + '_' + file.originalname);
+        } else if (file.mimetype.indexOf("video") > -1) {
+            callback(null, Date.now() + '_' + file.originalname);
         } else {
             callback({
-                error: 'Not a image file'
+                error: 'Not an image or video file'
             }, null);
         }
     }
@@ -140,59 +142,52 @@ app.post('/api/file', upload.single('file'), async (req,res, next) => {
 /**
  * Fourth endpoint to merge multiple videos
  */
-app.post('/api/videos', upload.array('files'), async (req, res) => {
-
-    // query params
-    const queryString = window.location.search;
-    const urlParams = new URLSearchParams(queryString);
-
-    let turn = urlParams.get('turn');
-    let fileName = urlParams.get('fileName');
-    let width = urlParams.get('width');
-    let height = urlParams.get('height');
-    let videoBitrate = urlParams.get('videoBitrate');
-
-    if (turn == '') {
-        turn = 'rotate=0';
-    } else {
-        turn = 'rotate=180'
-    }
-
-    if (fileName == '') {
-        fileName = 'mergedVideo.mp4';
-    } else {
-        fileName += '.mp4';
-    }
-
-    if (width == '') {
-        width = '?';
-    }
-
-    if (height == '') {
-        height = '?';
-    }
+app.post('/api/videos', upload.array('files'), (req, res) => {
 
     // video merge
-    let mergedVideo = ffmpeg();
-    let videos = req.files;
+    let videoObj = ffmpeg(req.files[0]);
+    let fileName = "transformed.mp4";
 
-    videos.forEach(function (video) {
-        mergedVideo = mergedVideo.addInput(video);
-    });
+    if (req.files.length > 1) {
+        req.files.forEach(function (video) {
+            videoObj = videoObj.input(video);
+        });
+    }
 
-    await mergedVideo.mergeToFile(__dirname + '/files/' + fileName)
-        .videoFilter(turn)
-        .size(width + 'x' + height)
-        .videoBitrate(videoBitrate);
+    videoObj = videoObj.mergeToFile(__dirname + '/files/merged.mp4');
+
+    // query params
+    if (req.query.turn === "true") {
+        videoObj = videoObj.videoFilter('rotate=180');
+    }
+
+    if (req.query.fileName) {
+        fileName = Date.now() + '_' + req.query.fileName;
+    } else {
+        fileName = 'files/' + Date.now() + '_' + fileName;
+    }
+
+    if (req.query.width && req.query.height) {
+        videoObj = videoObj.size(`${req.query.width} x ${req.query.height}`);
+    }
+
+    if (req.query.videoBitrate) {
+        videoObj = videoObj.videoBitrate(req.query.videoBitrate as string);
+    }
+
+    videoObj.save(fileName);
+
 
     // json-response
     res.json({
         data: {
             video: {
-                location: "https://m152-bis19p-janina-schuetz.herokuapp.com/files/" + fileName
+                location: "http://localhost:3000/" + fileName
             }
         }
     });
 });
 
 app.listen(process.env.PORT || port);
+
+//https://m152-bis19p-janina-schuetz.herokuapp.com/files/
