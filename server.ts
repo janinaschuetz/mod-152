@@ -59,9 +59,19 @@ let store = multer.diskStorage({
     },
     // how does the file get named
     filename: (req, file, callback) => {
-        if (file.mimetype.indexOf("image") > -1) {
+        if (req.query.fileName) {
+            if (req.files.length > 1) {
+                callback(null, Date.now() + '_' + file.originalname);
+            } else {
+                file.filename = Date.now() + '_' + req.query.fileName.toString() + '.mp4';
+                file.originalname = req.query.fileName.toString();
+                callback(null, Date.now() + '_' + file.originalname + '.mp4');
+            }
+        } else {
             callback(null, Date.now() + '_' + file.originalname);
-        } else if (file.mimetype.indexOf("video") > -1) {
+        }
+
+        if (file.mimetype.indexOf("image") > -1 || file.mimetype.indexOf("video") > -1) {
             callback(null, Date.now() + '_' + file.originalname);
         } else {
             callback({
@@ -144,10 +154,23 @@ app.post('/api/file', upload.single('file'), async (req,res, next) => {
  */
 app.post('/api/videos', upload.array('files'), (req, res) => {
 
-    // video merge
-    let videoObj = ffmpeg(req.files[0]);
-    let fileName = "transformed.mp4";
+    let videoObj = ffmpeg();
+    let mergedFileName = '';
+    let fileName = '';
 
+    if (req.query.fileName) {
+        if (req.files.length > 1) {
+            mergedFileName = Date.now() + '_' + req.query.fileName.toString() + '.mp4';
+        } else {
+            fileName = req.files[0].fileName;
+        }
+    } else {
+        fileName = req.files[0].fileName;
+        mergedFileName = Date.now() + '_' + 'transformed_video.mp4';
+    }
+
+
+    // video merge
     if (req.files.length > 1) {
         req.files.forEach(function (video) {
             videoObj = videoObj.input(video);
@@ -162,9 +185,9 @@ app.post('/api/videos', upload.array('files'), (req, res) => {
     }
 
     if (req.query.fileName) {
-        fileName = Date.now() + '_' + req.query.fileName;
+        mergedFileName = Date.now() + '_' + req.query.fileName;
     } else {
-        fileName = 'files/' + Date.now() + '_' + fileName;
+        mergedFileName = 'files/' + Date.now() + '_' + mergedFileName;
     }
 
     if (req.query.width && req.query.height) {
@@ -175,14 +198,14 @@ app.post('/api/videos', upload.array('files'), (req, res) => {
         videoObj = videoObj.videoBitrate(req.query.videoBitrate as string);
     }
 
-    videoObj.save(fileName);
+    videoObj.save(mergedFileName);
 
 
     // json-response
     res.json({
         data: {
             video: {
-                location: "http://localhost:3000/" + fileName
+                location: "http://localhost:3000/files/" + fileName
             }
         }
     });
