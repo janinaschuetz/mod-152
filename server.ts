@@ -1,5 +1,6 @@
 import * as sharp from "sharp";
 import * as multer from "multer";
+import * as ffmpeg from "fluent-ffmpeg";
 
 let express = require("express");
 let sass = require('node-sass');
@@ -58,11 +59,23 @@ let store = multer.diskStorage({
     },
     // how does the file get named
     filename: (req, file, callback) => {
-        if (file.mimetype.indexOf("image") > -1) {
+        if (req.query.fileName) {
+            if (req.files.length > 1) {
+                callback(null, Date.now() + '_' + file.originalname);
+            } else {
+                file.filename = Date.now() + '_' + req.query.fileName.toString() + '.mp4';
+                file.originalname = req.query.fileName.toString();
+                callback(null, Date.now() + '_' + file.originalname + '.mp4');
+            }
+        } else {
+            callback(null, Date.now() + '_' + file.originalname);
+        }
+
+        if (file.mimetype.indexOf("image") > -1 || file.mimetype.indexOf("video") > -1) {
             callback(null, Date.now() + '_' + file.originalname);
         } else {
             callback({
-                error: 'Not a image file'
+                error: 'Not an image or video file'
             }, null);
         }
     }
@@ -78,7 +91,7 @@ app.use('/files', express.static('files'));
 /**
  * Third endpoint to generate images in various sizes from one source-image
  */
-app.post('/api/file', upload.single('file'), (req,res, next) => {
+app.post('/api/file', upload.single('file'), async (req,res, next) => {
     for (let i = 0; i < 5; i++) {
         let filetype: string;
         let width: number;
@@ -114,7 +127,7 @@ app.post('/api/file', upload.single('file'), (req,res, next) => {
 
         files[i] = filetype + req.file.filename;
 
-        sharp(__dirname + '/uploads/' + req.file.filename)
+        await sharp(__dirname + '/uploads/' + req.file.filename)
             .resize(width, null, {
                 fit: "contain"
             })
@@ -127,10 +140,73 @@ app.post('/api/file', upload.single('file'), (req,res, next) => {
         data: {
             images: {
                 small: 'https://m152-bis19p-janina-schuetz.herokuapp.com/files/' + files[0],
-                medium: 'https://m152-bis19p-janina-schuetz.herokuapp.com/files/' + files [1],
+                medium: 'https://m152-bis19p-janina-schuetz.herokuapp.com/files/' + files[1],
                 large: 'https://m152-bis19p-janina-schuetz.herokuapp.com/files/' + files[2],
                 thumbnail: 'https://m152-bis19p-janina-schuetz.herokuapp.com/files/' + files[3],
                 original: 'https://m152-bis19p-janina-schuetz.herokuapp.com/files/' + files[4]
+            }
+        }
+    });
+});
+
+/**
+ * Fourth endpoint to merge multiple videos
+ * not functional... :(
+ */
+app.post('/api/videos', upload.array('files'), (req, res) => {
+
+    let videoObj = ffmpeg();
+    let mergedFileName = '';
+    let fileName = '';
+
+    if (req.query.fileName) {
+        if (req.files.length > 1) {
+            mergedFileName = Date.now() + '_' + req.query.fileName.toString() + '.mp4';
+        } else {
+            fileName = req.files[0].fileName;
+        }
+    } else {
+        fileName = req.files[0].fileName;
+        mergedFileName = Date.now() + '_' + 'transformed_video.mp4';
+    }
+
+
+    // video merge
+    if (req.files.length > 1) {
+        req.files.forEach(function (video) {
+            videoObj = videoObj.input(video);
+        });
+    }
+
+    videoObj = videoObj.mergeToFile(__dirname + '/files/merged.mp4');
+
+    // query params
+    if (req.query.turn === "true") {
+        videoObj = videoObj.videoFilter('rotate=180');
+    }
+
+    if (req.query.fileName) {
+        mergedFileName = Date.now() + '_' + req.query.fileName;
+    } else {
+        mergedFileName = 'files/' + Date.now() + '_' + mergedFileName;
+    }
+
+    if (req.query.width && req.query.height) {
+        videoObj = videoObj.size(`${req.query.width} x ${req.query.height}`);
+    }
+
+    if (req.query.videoBitrate) {
+        videoObj = videoObj.videoBitrate(req.query.videoBitrate as string);
+    }
+
+    videoObj.save(mergedFileName);
+
+
+    // json-response
+    res.json({
+        data: {
+            video: {
+                location: "https://m152-bis19p-janina-schuetz.herokuapp.com/files/" + fileName
             }
         }
     });
