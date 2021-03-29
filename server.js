@@ -191,6 +191,7 @@ app.post('/api/file', upload.single('file'), function (req, res, next) { return 
 });
 /**
  * Fourth endpoint to merge multiple videos
+ * not functional... :(
  */
 app.post('/api/videos', upload.array('files'), function (req, res) {
     var videoObj = ffmpeg();
@@ -236,11 +237,10 @@ app.post('/api/videos', upload.array('files'), function (req, res) {
     res.json({
         data: {
             video: {
-                location: "http://localhost:3000/files/" + fileName
+                location: "https://m152-bis19p-janina-schuetz.herokuapp.com/files/" + fileName
             }
         }
     });
 });
 app.listen(process.env.PORT || port);
-//https://m152-bis19p-janina-schuetz.herokuapp.com/files/
 //# sourceMappingURL=server.js.map

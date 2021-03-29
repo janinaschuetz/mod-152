@@ -151,6 +151,7 @@ app.post('/api/file', upload.single('file'), async (req,res, next) => {
 
 /**
  * Fourth endpoint to merge multiple videos
+ * not functional... :(
  */
 app.post('/api/videos', upload.array('files'), (req, res) => {
 
@@ -205,12 +206,10 @@ app.post('/api/videos', upload.array('files'), (req, res) => {
     res.json({
         data: {
             video: {
-                location: "http://localhost:3000/files/" + fileName
+                location: "https://m152-bis19p-janina-schuetz.herokuapp.com/files/" + fileName
             }
         }
     });
 });
 
 app.listen(process.env.PORT || port);
-
-//https://m152-bis19p-janina-schuetz.herokuapp.com/files/
