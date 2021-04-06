@@ -90,18 +90,16 @@ app.post('/api/css/less', function (req, res) {
 var store = multer.diskStorage({
     // where does the file get stored
     destination: function (req, file, callback) {
-        callback(null, __dirname + '/uploads');
+        if (file.mimetype.indexOf("audio") > -1 || file.mimetype.indexOf("text/vtt") > -1) {
+            callback(null, __dirname + '/files');
+        }
+        else {
+            callback(null, __dirname + '/uploads');
+        }
     },
     // how does the file get named
     filename: function (req, file, callback) {
-        if (file.mimetype.indexOf("image") > -1 || file.mimetype.indexOf("video") > -1) {
-            callback(null, Date.now() + '_' + file.originalname);
-        }
-        else {
-            callback({
-                error: 'Not an image or video file'
-            }, null);
-        }
+        callback(null, Date.now() + '_' + file.originalname);
     }
 });
 var upload = multer({ storage: store });
@@ -235,8 +233,8 @@ app.post('/api/videos', upload.array('files'), function (req, res) {
 app.post('/api/audio', upload.fields([{ name: 'audio' }, { name: 'vtt' }]), function (req, res) {
     res.json({
         data: {
-            audio: req.files['audio'][0].filename,
-            vtt: req.files['vtt'][0].filename
+            audio: "https://m152-bis19p-janina-schuetz.herokuapp.com/files/" + req.files['audio'][0].filename,
+            vtt: "https://m152-bis19p-janina-schuetz.herokuapp.com/files/" + req.files['vtt'][0].filename
         }
     });
 });

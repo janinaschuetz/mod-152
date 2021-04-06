@@ -55,17 +55,15 @@ app.post('/api/css/less', (req, res) => {
 let store = multer.diskStorage({
     // where does the file get stored
     destination: (req, file, callback) => {
-        callback(null, __dirname + '/uploads');
+        if (file.mimetype.indexOf("audio") > -1 || file.mimetype.indexOf("text/vtt") > -1) {
+            callback(null, __dirname + '/files');
+        } else {
+            callback(null, __dirname + '/uploads');
+        }
     },
     // how does the file get named
     filename: (req, file, callback) => {
-        if (file.mimetype.indexOf("image") > -1 || file.mimetype.indexOf("video") > -1) {
-            callback(null, Date.now() + '_' + file.originalname);
-        } else {
-            callback({
-                error: 'Not an image or video file'
-            }, null);
-        }
+        callback(null, Date.now() + '_' + file.originalname);
     }
 });
 
@@ -79,7 +77,7 @@ app.use('/files', express.static('files'));
 /**
  * Third endpoint to generate images in various sizes from one source-image
  */
-app.post('/api/file', upload.single('file'), async (req,res, next) => {
+app.post('/api/file', upload.single('file'), async (req, res, next) => {
     for (let i = 0; i < 5; i++) {
         let filetype: string;
         let width: number;
@@ -202,12 +200,14 @@ app.post('/api/videos', upload.array('files'), (req, res) => {
 /**
  * Fifth endpoint to upload a audio- and a vtt-file
  */
-app.post('/api/audio', upload.fields([{ name: 'audio' }, { name: 'vtt' }]), (req, res) => {
+app.post('/api/audio', upload.fields([{name: 'audio'}, {name: 'vtt'}]), (req, res) => {
+
+
 
     res.json({
         data: {
-            audio: req.files['audio'][0].filename,
-            vtt: req.files['vtt'][0].filename
+            audio: "https://m152-bis19p-janina-schuetz.herokuapp.com/files/" + req.files['audio'][0].filename,
+            vtt: "https://m152-bis19p-janina-schuetz.herokuapp.com/files/" + req.files['vtt'][0].filename
         }
     });
 });
