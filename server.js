@@ -90,31 +90,16 @@ app.post('/api/css/less', function (req, res) {
 var store = multer.diskStorage({
     // where does the file get stored
     destination: function (req, file, callback) {
-        callback(null, __dirname + '/uploads');
+        if (file.mimetype.indexOf("audio") > -1 || file.mimetype.indexOf("text/vtt") > -1) {
+            callback(null, __dirname + '/files');
+        }
+        else {
+            callback(null, __dirname + '/uploads');
+        }
     },
     // how does the file get named
     filename: function (req, file, callback) {
-        if (req.query.fileName) {
-            if (req.files.length > 1) {
-                callback(null, Date.now() + '_' + file.originalname);
-            }
-            else {
-                file.filename = Date.now() + '_' + req.query.fileName.toString() + '.mp4';
-                file.originalname = req.query.fileName.toString();
-                callback(null, Date.now() + '_' + file.originalname + '.mp4');
-            }
-        }
-        else {
-            callback(null, Date.now() + '_' + file.originalname);
-        }
-        if (file.mimetype.indexOf("image") > -1 || file.mimetype.indexOf("video") > -1) {
-            callback(null, Date.now() + '_' + file.originalname);
-        }
-        else {
-            callback({
-                error: 'Not an image or video file'
-            }, null);
-        }
+        callback(null, Date.now() + '_' + file.originalname);
     }
 });
 var upload = multer({ storage: store });
@@ -212,13 +197,13 @@ app.post('/api/videos', upload.array('files'), function (req, res) {
     // video merge
     if (req.files.length > 1) {
         req.files.forEach(function (video) {
-            videoObj = videoObj.input(video);
+            videoObj = videoObj.input(video.path);
         });
     }
     videoObj = videoObj.mergeToFile(__dirname + '/files/merged.mp4');
     // query params
     if (req.query.turn === "true") {
-        videoObj = videoObj.videoFilter('rotate=180');
+        videoObj = videoObj.withVideoFilter('transpose=1, transpose=1');
     }
     if (req.query.fileName) {
         mergedFileName = Date.now() + '_' + req.query.fileName;
@@ -227,7 +212,7 @@ app.post('/api/videos', upload.array('files'), function (req, res) {
         mergedFileName = 'files/' + Date.now() + '_' + mergedFileName;
     }
     if (req.query.width && req.query.height) {
-        videoObj = videoObj.size(req.query.width + " x " + req.query.height);
+        videoObj = videoObj.size(req.query.width + "x" + req.query.height);
     }
     if (req.query.videoBitrate) {
         videoObj = videoObj.videoBitrate(req.query.videoBitrate);
@@ -239,6 +224,17 @@ app.post('/api/videos', upload.array('files'), function (req, res) {
             video: {
                 location: "https://m152-bis19p-janina-schuetz.herokuapp.com/files/" + fileName
             }
+        }
+    });
+});
+/**
+ * Fifth endpoint to upload a audio- and a vtt-file
+ */
+app.post('/api/audio', upload.fields([{ name: 'audio' }, { name: 'vtt' }]), function (req, res) {
+    res.json({
+        data: {
+            audio: "https://m152-bis19p-janina-schuetz.herokuapp.com/files/" + req.files['audio'][0].filename,
+            vtt: "https://m152-bis19p-janina-schuetz.herokuapp.com/files/" + req.files['vtt'][0].filename
         }
     });
 });

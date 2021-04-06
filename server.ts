@@ -55,29 +55,15 @@ app.post('/api/css/less', (req, res) => {
 let store = multer.diskStorage({
     // where does the file get stored
     destination: (req, file, callback) => {
-        callback(null, __dirname + '/uploads');
+        if (file.mimetype.indexOf("audio") > -1 || file.mimetype.indexOf("text/vtt") > -1) {
+            callback(null, __dirname + '/files');
+        } else {
+            callback(null, __dirname + '/uploads');
+        }
     },
     // how does the file get named
     filename: (req, file, callback) => {
-        if (req.query.fileName) {
-            if (req.files.length > 1) {
-                callback(null, Date.now() + '_' + file.originalname);
-            } else {
-                file.filename = Date.now() + '_' + req.query.fileName.toString() + '.mp4';
-                file.originalname = req.query.fileName.toString();
-                callback(null, Date.now() + '_' + file.originalname + '.mp4');
-            }
-        } else {
-            callback(null, Date.now() + '_' + file.originalname);
-        }
-
-        if (file.mimetype.indexOf("image") > -1 || file.mimetype.indexOf("video") > -1) {
-            callback(null, Date.now() + '_' + file.originalname);
-        } else {
-            callback({
-                error: 'Not an image or video file'
-            }, null);
-        }
+        callback(null, Date.now() + '_' + file.originalname);
     }
 });
 
@@ -91,7 +77,7 @@ app.use('/files', express.static('files'));
 /**
  * Third endpoint to generate images in various sizes from one source-image
  */
-app.post('/api/file', upload.single('file'), async (req,res, next) => {
+app.post('/api/file', upload.single('file'), async (req, res, next) => {
     for (let i = 0; i < 5; i++) {
         let filetype: string;
         let width: number;
@@ -170,11 +156,10 @@ app.post('/api/videos', upload.array('files'), (req, res) => {
         mergedFileName = Date.now() + '_' + 'transformed_video.mp4';
     }
 
-
     // video merge
     if (req.files.length > 1) {
         req.files.forEach(function (video) {
-            videoObj = videoObj.input(video);
+            videoObj = videoObj.input(video.path);
         });
     }
 
@@ -182,7 +167,7 @@ app.post('/api/videos', upload.array('files'), (req, res) => {
 
     // query params
     if (req.query.turn === "true") {
-        videoObj = videoObj.videoFilter('rotate=180');
+        videoObj = videoObj.withVideoFilter('transpose=1, transpose=1');
     }
 
     if (req.query.fileName) {
@@ -192,7 +177,7 @@ app.post('/api/videos', upload.array('files'), (req, res) => {
     }
 
     if (req.query.width && req.query.height) {
-        videoObj = videoObj.size(`${req.query.width} x ${req.query.height}`);
+        videoObj = videoObj.size(`${req.query.width}x${req.query.height}`);
     }
 
     if (req.query.videoBitrate) {
@@ -208,6 +193,18 @@ app.post('/api/videos', upload.array('files'), (req, res) => {
             video: {
                 location: "https://m152-bis19p-janina-schuetz.herokuapp.com/files/" + fileName
             }
+        }
+    });
+});
+
+/**
+ * Fifth endpoint to upload a audio- and a vtt-file
+ */
+app.post('/api/audio', upload.fields([{name: 'audio'}, {name: 'vtt'}]), (req, res) => {
+    res.json({
+        data: {
+            audio: "https://m152-bis19p-janina-schuetz.herokuapp.com/files/" + req.files['audio'][0].filename,
+            vtt: "https://m152-bis19p-janina-schuetz.herokuapp.com/files/" + req.files['vtt'][0].filename
         }
     });
 });
