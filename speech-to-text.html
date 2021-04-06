@@ -7,12 +7,23 @@
 </head>
 <body>
 
-<div>
+<div id="main">
     <h1>Speech-to-text - Modul 152</h1>
 
-    <div>
-        <div>
-            <button onclick="start()" class="btn btn-primary">Start</button>
+    <div id="content">
+        <div id="languages">
+            <label for="languages">Choose a language:</label>
+            <select name="languages" id="select-languages">
+                <option value="german">Deutsch (CH)</option>
+                <option value="english">English (US)</option>
+                <option value="french">Français (F)</option>
+            </select>
+        </div>
+        <div id="text-area">
+            <textarea name="speech-box" id="speech-box" cols="50" rows="5" readonly></textarea>
+        </div>
+        <div id="buttons">
+            <img onclick="start()" src="icon_mic2.svg" alt="Microphone" width="30" height="30">
             <button onclick="end()" class="btn btn-danger">Stop</button>
         </div>
     </div>
@@ -24,7 +35,19 @@
     recognition.interimResults = true;
 
     function start() {
-        recognition.lang = "de-CH";
+        let language = document.getElementById("select-languages").value;
+
+        switch (language) {
+            case "german":
+                recognition.lang = "de-CH";
+                break;
+            case "english":
+                recognition.lang = "en-US";
+                break;
+            case "french":
+                recognition.lang = "fr";
+                break;
+        }
         recognition.start();
     }
 
@@ -37,6 +60,13 @@
     }
 
     recognition.onresult = function (event) {
+        let textbox = document.getElementById("speech-box");
+        textbox.value = event.results[0][0].transcript;
+
+        setTimeout(function (){
+            textbox.value = "";
+        }, 5000);
+
         console.log(event);
     }
 
