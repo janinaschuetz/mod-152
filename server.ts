@@ -201,9 +201,6 @@ app.post('/api/videos', upload.array('files'), (req, res) => {
  * Fifth endpoint to upload a audio- and a vtt-file
  */
 app.post('/api/audio', upload.fields([{name: 'audio'}, {name: 'vtt'}]), (req, res) => {
-
-
-
     res.json({
         data: {
             audio: "https://m152-bis19p-janina-schuetz.herokuapp.com/files/" + req.files['audio'][0].filename,
