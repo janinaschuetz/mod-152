@@ -1,6 +1,7 @@
 import * as sharp from "sharp";
 import * as multer from "multer";
 import * as ffmpeg from "fluent-ffmpeg";
+import * as Websocket from "ws";
 
 let express = require("express");
 let sass = require('node-sass');
@@ -8,6 +9,9 @@ let less = require('less');
 const app = express();
 const port = 3000;
 let files: string[] = new Array(5);
+const wss = new Websocket.Server({
+   port: 8080,
+});
 
 app.use(express.urlencoded({extended: true}));
 app.use(express.json());
@@ -210,3 +214,18 @@ app.post('/api/audio', upload.fields([{name: 'audio'}, {name: 'vtt'}]), (req, re
 });
 
 app.listen(process.env.PORT || port);
+
+/**
+ * Last part of LB1 - Websocket
+ */
+wss.on('connection', client => {
+
+    client.on('message', data => {
+        Array.from(wss.clients)
+            .filter(connectedClient => connectedClient !== client)
+            .forEach(connectedClient => connectedClient.send(data));
+    });
+
+    client.send('Herzlich Willkommen im Chat.');
+
+});

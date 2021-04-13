@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+
+<div class="form-group">
+    <label for="my-message">Meine Nachricht</label>
+    <input type="text" id="my-message">
+</div>
+<button onclick="sendMessageToServer()">Senden</button>
+
+<div id="chat">
+
+</div>
+
+<script>
+    let wsClient = new WebSocket('ws://localhost:8080');
+
+    function sendMessageToServer() {
+        const valueToSend = document.querySelector('#my-message').value;
+        wsClient.send(valueToSend);
+    }
+
+    wsClient.onopen = function (event) {
+        console.log("Connection established.");
+        console.log(event);
+    }
+
+    wsClient.onmessage = function (event) {
+        console.log("Message received.");
+        console.log(event);
+        document.querySelector('#chat').innerHTML += "<p>" + event.data + "</p><br>";
+    }
+
+</script>
+
+</body>
+</html>
