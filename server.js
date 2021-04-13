@@ -39,12 +39,16 @@ Object.defineProperty(exports, "__esModule", { value: true });
 var sharp = require("sharp");
 var multer = require("multer");
 var ffmpeg = require("fluent-ffmpeg");
+var Websocket = require("ws");
 var express = require("express");
 var sass = require('node-sass');
 var less = require('less');
 var app = express();
 var port = 3000;
 var files = new Array(5);
+var wss = new Websocket.Server({
+    port: 8080,
+});
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 /**
@@ -239,4 +243,15 @@ app.post('/api/audio', upload.fields([{ name: 'audio' }, { name: 'vtt' }]), func
     });
 });
 app.listen(process.env.PORT || port);
+/**
+ * Last part of LB1 - Websocket
+ */
+wss.on('connection', function (client) {
+    client.on('message', function (data) {
+        Array.from(wss.clients)
+            .filter(function (connectedClient) { return connectedClient !== client; })
+            .forEach(function (connectedClient) { return connectedClient.send(data); });
+    });
+    client.send('Herzlich Willkommen im Chat.');
+});
 //# sourceMappingURL=server.js.map
