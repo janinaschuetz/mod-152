@@ -2,25 +2,39 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Title</title>
+    <link rel="stylesheet" href="bootstrap.min.css">
+    <link href="node_modules/froala-editor/css/froala_editor.pkgd.min.css" rel="stylesheet" type="text/css" />
+    <script type="text/javascript" src="node_modules/froala-editor/js/froala_editor.pkgd.min.js"></script>
+    <title>Webchat</title>
 </head>
 <body>
 
 <div class="form-group">
-    <label for="my-message">Meine Nachricht</label>
-    <input type="text" id="my-message">
-</div>
-<button onclick="sendMessageToServer()">Senden</button>
+    <label for="username">Benutzername</label><br>
+    <input type="text" id="username">
 
-<div id="chat">
+    <br>
+    <br>
+
+    <label for="content">Meine Nachricht</label><br>
+    <textarea name="content" id="content" cols="50" rows="5"></textarea>
+</div>
+<button class="btn btn-success" onclick="sendMessageToServer()">Senden</button>
+
+<br>
+<br>
+
+<div id="chat" class="fr-view">
 
 </div>
 
 <script>
+    var editor = new FroalaEditor('#content');
+
     let wsClient = new WebSocket('ws://localhost:8080');
 
     function sendMessageToServer() {
-        const valueToSend = document.querySelector('#my-message').value;
+        const valueToSend = document.querySelector('#content').value;
         wsClient.send(valueToSend);
     }
 
@@ -34,7 +48,6 @@
         console.log(event);
         document.querySelector('#chat').innerHTML += "<p>" + event.data + "</p><br>";
     }
-
 </script>
 
 </body>
