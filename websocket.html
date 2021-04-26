@@ -34,8 +34,21 @@
     let wsClient = new WebSocket('ws://localhost:8080');
 
     function sendMessageToServer() {
-        const valueToSend = document.querySelector('#content').value;
-        wsClient.send(valueToSend);
+        if ((document.querySelector('#username').value !== '') && (document.querySelector('#content').value !== '')) {
+            //const valueToSend = document.querySelector('#username').value + ': ' + document.querySelector('#content').value;
+
+            let msg = {
+                content: document.querySelector('#content').value,
+                username: document.querySelector('#username').value
+            };
+
+            wsClient.send(JSON.stringify(msg));
+
+            // Blank the text input element, ready to receive the next line of text from the user.
+            document.querySelector('#content').value = "";
+        } else {
+            alert("Füllen Sie die Felder Benutzername und Nachricht aus.");
+        }
     }
 
     wsClient.onopen = function (event) {

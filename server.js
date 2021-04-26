@@ -43,6 +43,7 @@ var Websocket = require("ws");
 var express = require("express");
 var sass = require('node-sass');
 var less = require('less');
+var path = require('path');
 var app = express();
 var port = 3000;
 var files = new Array(5);
@@ -246,6 +247,10 @@ app.listen(process.env.PORT || port);
 /**
  * Last part of LB1 - Websocket
  */
+// GET-Request for main page (= websocket.html)
+app.get('/', function (req, res) {
+    res.sendFile(path.join(__dirname + '/websocket.html'));
+});
 wss.on('connection', function (client) {
     client.on('message', function (data) {
         Array.from(wss.clients)

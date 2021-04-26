@@ -6,6 +6,8 @@ import * as Websocket from "ws";
 let express = require("express");
 let sass = require('node-sass');
 let less = require('less');
+let path = require('path');
+
 const app = express();
 const port = 3000;
 let files: string[] = new Array(5);
@@ -218,6 +220,11 @@ app.listen(process.env.PORT || port);
 /**
  * Last part of LB1 - Websocket
  */
+// GET-Request for main page (= websocket.html)
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname + '/websocket.html'));
+});
+
 wss.on('connection', client => {
 
     client.on('message', data => {
@@ -227,5 +234,4 @@ wss.on('connection', client => {
     });
 
     client.send('Herzlich Willkommen im Chat.');
-
 });
