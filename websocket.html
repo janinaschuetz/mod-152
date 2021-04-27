@@ -19,7 +19,7 @@
     <label for="content">Meine Nachricht</label><br>
     <textarea name="content" id="content" cols="50" rows="5"></textarea>
 </div>
-<button class="btn btn-success" onclick="sendMessageToServer()">Senden</button>
+<button id="send" class="btn btn-success" onclick="sendMessageToServer()">Senden</button>
 
 <br>
 <br>
@@ -29,26 +29,46 @@
 </div>
 
 <script>
-    var editor = new FroalaEditor('#content');
+    let editor = new FroalaEditor('#content', {}, function () {
+        editor.events.on(document.querySelector('body'), 'click', '#send', function () {
+            editor.html.set('');
+            editor.events.focus();
+        });
+    });
+
+    // new FroalaEditor('textarea', function () {
+    //     let editor = this;
+    //     editor.events.on(document.querySelector('body'), 'click', '#send', function () {
+    //         editor.html.set('');
+    //         editor.events.focus();
+    //     });
+    // });
 
     let wsClient = new WebSocket('ws://localhost:8080');
 
     function sendMessageToServer() {
-        if ((document.querySelector('#username').value !== '') && (document.querySelector('#content').value !== '')) {
-            //const valueToSend = document.querySelector('#username').value + ': ' + document.querySelector('#content').value;
+        let username = document.querySelector('#username').value;
+        let content = document.querySelector('#content').value;
 
+        if (!(username === "" || content === "")) {
             let msg = {
+                username: document.querySelector('#username').value,
                 content: document.querySelector('#content').value,
-                username: document.querySelector('#username').value
+                timestamp: Date.now()
             };
 
             wsClient.send(JSON.stringify(msg));
 
-            // Blank the text input element, ready to receive the next line of text from the user.
-            document.querySelector('#content').value = "";
         } else {
             alert("Füllen Sie die Felder Benutzername und Nachricht aus.");
         }
+    }
+
+    function removeParagraphTag(content) {
+        let newContent = content;
+        newContent = newContent.replace('<p>', '');
+        newContent = newContent.replace('</p>', '');
+        return newContent;
     }
 
     wsClient.onopen = function (event) {
@@ -59,7 +79,21 @@
     wsClient.onmessage = function (event) {
         console.log("Message received.");
         console.log(event);
-        document.querySelector('#chat').innerHTML += "<p>" + event.data + "</p><br>";
+
+        if (event.data === "Herzlich Willkommen im Chat.") {
+            document.querySelector('#chat').innerHTML += "<p>" + event.data + "</p><br>"
+
+        } else {
+            let text;
+            let msg = JSON.parse(event.data);
+            let time = new Date(msg.timestamp);
+            let timeStr = time.toLocaleTimeString();
+            let content = removeParagraphTag(msg.content);
+
+            text = "<b>User <em>" + msg.username + "</em> (" + timeStr + ")</b>: " + content + "<br>";
+
+            document.querySelector('#chat').innerHTML += text;
+        }
     }
 </script>
 

@@ -225,13 +225,33 @@ app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname + '/websocket.html'));
 });
 
+function noop() {}
+
 wss.on('connection', client => {
+
+    client.isAlive = true;
+    client.on('pong', () => { client.isAlive = true });
 
     client.on('message', data => {
         Array.from(wss.clients)
-            .filter(connectedClient => connectedClient !== client)
+            //.filter(connectedClient => connectedClient !== client)
             .forEach(connectedClient => connectedClient.send(data));
     });
 
     client.send('Herzlich Willkommen im Chat.');
+});
+
+const interval = setInterval(function ping() {
+   wss.clients.forEach(function each(ws) {
+       if (!ws.isAlive) {
+           console.log('exit')
+           ws.terminate();
+       }
+       ws.isAlive = false;
+       ws.ping(noop);
+   });
+}, 3000);
+
+wss.on('close', function close() {
+    clearInterval(interval);
 });

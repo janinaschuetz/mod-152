@@ -251,12 +251,28 @@ app.listen(process.env.PORT || port);
 app.get('/', function (req, res) {
     res.sendFile(path.join(__dirname + '/websocket.html'));
 });
+function noop() { }
 wss.on('connection', function (client) {
+    client.isAlive = true;
+    client.on('pong', function () { client.isAlive = true; });
     client.on('message', function (data) {
         Array.from(wss.clients)
-            .filter(function (connectedClient) { return connectedClient !== client; })
+            //.filter(connectedClient => connectedClient !== client)
             .forEach(function (connectedClient) { return connectedClient.send(data); });
     });
     client.send('Herzlich Willkommen im Chat.');
+});
+var interval = setInterval(function ping() {
+    wss.clients.forEach(function each(ws) {
+        if (!ws.isAlive) {
+            console.log('exit');
+            ws.terminate();
+        }
+        ws.isAlive = false;
+        ws.ping(noop);
+    });
+}, 3000);
+wss.on('close', function close() {
+    clearInterval(interval);
 });
 //# sourceMappingURL=server.js.map
