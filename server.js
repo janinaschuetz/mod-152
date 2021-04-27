@@ -39,12 +39,17 @@ Object.defineProperty(exports, "__esModule", { value: true });
 var sharp = require("sharp");
 var multer = require("multer");
 var ffmpeg = require("fluent-ffmpeg");
+var Websocket = require("ws");
 var express = require("express");
 var sass = require('node-sass');
 var less = require('less');
+var path = require('path');
 var app = express();
 var port = 3000;
 var files = new Array(5);
+var wss = new Websocket.Server({
+    port: 8080,
+});
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 /**
@@ -239,4 +244,35 @@ app.post('/api/audio', upload.fields([{ name: 'audio' }, { name: 'vtt' }]), func
     });
 });
 app.listen(process.env.PORT || port);
+/**
+ * Last part of LB1 - Websocket
+ */
+// GET-Request for main page (= websocket.html)
+app.get('/', function (req, res) {
+    res.sendFile(path.join(__dirname + '/websocket.html'));
+});
+function noop() { }
+wss.on('connection', function (client) {
+    client.isAlive = true;
+    client.on('pong', function () { client.isAlive = true; });
+    client.on('message', function (data) {
+        Array.from(wss.clients)
+            //.filter(connectedClient => connectedClient !== client)
+            .forEach(function (connectedClient) { return connectedClient.send(data); });
+    });
+    client.send('Herzlich Willkommen im Chat.');
+});
+var interval = setInterval(function ping() {
+    wss.clients.forEach(function each(ws) {
+        if (!ws.isAlive) {
+            console.log('exit');
+            ws.terminate();
+        }
+        ws.isAlive = false;
+        ws.ping(noop);
+    });
+}, 3000);
+wss.on('close', function close() {
+    clearInterval(interval);
+});
 //# sourceMappingURL=server.js.map

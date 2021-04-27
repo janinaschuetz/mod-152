@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="bootstrap.min.css">
+    <link href="node_modules/froala-editor/css/froala_editor.pkgd.min.css" rel="stylesheet" type="text/css" />
+    <script type="text/javascript" src="node_modules/froala-editor/js/froala_editor.pkgd.min.js"></script>
+    <title>Webchat</title>
+</head>
+<body>
+
+<div class="form-group">
+    <label for="username">Benutzername</label><br>
+    <input type="text" id="username">
+
+    <br>
+    <br>
+
+    <label for="content">Meine Nachricht</label><br>
+    <textarea name="content" id="content" cols="50" rows="5"></textarea>
+</div>
+<button id="send" class="btn btn-success" onclick="sendMessageToServer()">Senden</button>
+
+<br>
+<br>
+
+<div id="chat" class="fr-view">
+
+</div>
+
+<script>
+    let editor = new FroalaEditor('#content', {}, function () {
+        editor.events.on(document.querySelector('body'), 'click', '#send', function () {
+            editor.html.set('');
+            editor.events.focus();
+        });
+    });
+
+    // new FroalaEditor('textarea', function () {
+    //     let editor = this;
+    //     editor.events.on(document.querySelector('body'), 'click', '#send', function () {
+    //         editor.html.set('');
+    //         editor.events.focus();
+    //     });
+    // });
+
+    let wsClient = new WebSocket('ws://localhost:8080');
+
+    function sendMessageToServer() {
+        let username = document.querySelector('#username').value;
+        let content = document.querySelector('#content').value;
+
+        if (!(username === "" || content === "")) {
+            let msg = {
+                username: document.querySelector('#username').value,
+                content: document.querySelector('#content').value,
+                timestamp: Date.now()
+            };
+
+            wsClient.send(JSON.stringify(msg));
+
+        } else {
+            alert("Füllen Sie die Felder Benutzername und Nachricht aus.");
+        }
+    }
+
+    function removeParagraphTag(content) {
+        let newContent = content;
+        newContent = newContent.replace('<p>', '');
+        newContent = newContent.replace('</p>', '');
+        return newContent;
+    }
+
+    wsClient.onopen = function (event) {
+        console.log("Connection established.");
+        console.log(event);
+    }
+
+    wsClient.onmessage = function (event) {
+        console.log("Message received.");
+        console.log(event);
+
+        if (event.data === "Herzlich Willkommen im Chat.") {
+            document.querySelector('#chat').innerHTML += "<p>" + event.data + "</p><br>"
+
+        } else {
+            let text;
+            let msg = JSON.parse(event.data);
+            let time = new Date(msg.timestamp);
+            let timeStr = time.toLocaleTimeString();
+            let content = removeParagraphTag(msg.content);
+
+            text = "<b>User <em>" + msg.username + "</em> (" + timeStr + ")</b>: " + content + "<br>";
+
+            document.querySelector('#chat').innerHTML += text;
+        }
+    }
+</script>
+
+</body>
+</html>
